@@ -77,6 +77,40 @@
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
+  #preview {
+    display: none;
+    margin-top: 20px;
+  }
+  #preview.show {
+    display: block;
+  }
+  #icsContent {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .download-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 15px 30px;
+    background: #34C759;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .download-link:hover {
+    background: #2da44e;
+  }
 </style>
 </head>
 <body>
@@ -126,9 +160,13 @@
 
 </div>
 
-<button onclick="downloadICS()">カレンダーに登録（ICSダウンロード）</button>
+<button onclick="generateICS()">ICS作成</button>
 
-<a href="test.ics" download>テスト</a>
+<div id="preview" class="section">
+  <h3 style="margin-top: 0;">作成されたICSファイル</h3>
+  <pre id="icsContent"></pre>
+  <a id="downloadLink" class="download-link" download="reservation.ics">ダウンロード</a>
+</div>
 
 <script>
 // 日付をICS形式に変換（YYYYMMDD）
@@ -192,8 +230,11 @@ function foldBase64(base64) {
   return lines.join('\r\n');
 }
 
-// ICSファイルを生成してダウンロード
-async function downloadICS() {
+// 現在のBlobURLを保持（メモリリーク防止）
+let currentBlobUrl = null;
+
+// ICSファイルを生成して画面に表示
+async function generateICS() {
   const summary = document.getElementById('summary').value || '宿泊予約';
   const dtstart = document.getElementById('dtstart').value;
   const dtend = document.getElementById('dtend').value;
@@ -241,7 +282,8 @@ async function downloadICS() {
   if (attachFile) {
     const base64 = await fileToBase64(attachFile);
     const mimeType = getMimeType(attachFile);
-    const attachLine = `ATTACH;ENCODING=BASE64;VALUE=BINARY;FMTTYPE=${mimeType}:`;
+    const fileName = attachFile.name;
+    const attachLine = `ATTACH;ENCODING=BASE64;VALUE=BINARY;FMTTYPE=${mimeType};X-FILENAME=${fileName}:`;
     icsContent.push(attachLine + foldBase64(base64).replace(/^\s/, ''));
   }
 
@@ -253,16 +295,22 @@ async function downloadICS() {
 
   const icsString = icsContent.join('\r\n');
 
-  // Blobを作成してダウンロード
+  // 画面にICS内容を表示
+  document.getElementById('icsContent').textContent = icsString;
+  document.getElementById('preview').classList.add('show');
+
+  // 前のBlobURLを解放
+  if (currentBlobUrl) {
+    URL.revokeObjectURL(currentBlobUrl);
+  }
+
+  // ダウンロードリンクを設定
   const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
-  const blobUrl = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = blobUrl;
-  a.download = 'reservation.ics';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(blobUrl);
+  currentBlobUrl = URL.createObjectURL(blob);
+  document.getElementById('downloadLink').href = currentBlobUrl;
+
+  // プレビューエリアにスクロール
+  document.getElementById('preview').scrollIntoView({ behavior: 'smooth' });
 }
 </script>
 

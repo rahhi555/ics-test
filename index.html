@@ -128,6 +128,8 @@
 
 <button onclick="downloadICS()">カレンダーに登録（ICSダウンロード）</button>
 
+<a href="test.ics" download>テスト</a>
+
 <script>
 // 日付をICS形式に変換（YYYYMMDD）
 function formatDateForICS(dateStr) {
@@ -250,7 +252,7 @@ async function downloadICS() {
   icsContent.push('END:VCALENDAR');
 
   const icsString = icsContent.join('\r\n');
-  
+
   // Blobを作成してダウンロード
   const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
   const blobUrl = URL.createObjectURL(blob);

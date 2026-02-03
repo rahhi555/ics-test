@@ -1,14 +1,268 @@
 <!DOCTYPE html>
-<html lang="ja"> 
+<html lang="ja">
 <head>
 <meta charset="utf-8">
-<title></title>
+<title>宿泊予約カレンダー登録</title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f5f5f5;
+  }
+  h1 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+  input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #007AFF;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  .datetime-group {
+    display: flex;
+    gap: 10px;
+  }
+  .datetime-group input {
+    flex: 1;
+  }
+  button {
+    width: 100%;
+    padding: 15px;
+    background: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+  button:active {
+    transform: scale(0.98);
+  }
+  .section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+</style>
 </head>
 <body>
 
-    <a href="test.ics" download>カレンダー設定</a>
+<h1>宿泊予約カレンダー登録</h1>
+
+<div class="section">
+  <div class="form-group">
+    <label for="summary">予約名</label>
+    <input type="text" id="summary" value="温泉旅館 山水荘 宿泊予約" placeholder="宿泊施設名・予約名">
+  </div>
+
+  <div class="form-group">
+    <label for="dtstart">チェックイン日</label>
+    <input type="date" id="dtstart" value="2026-03-15">
+  </div>
+
+  <div class="form-group">
+    <label for="dtend">チェックアウト日</label>
+    <input type="date" id="dtend" value="2026-03-19">
+  </div>
+
+  <div class="form-group">
+    <label for="location">宿泊施設住所</label>
+    <input type="text" id="location" value="東京都渋谷区神宮前1-2-3" placeholder="宿泊施設の住所">
+  </div>
+
+  <div class="form-group">
+    <label for="description">予約詳細</label>
+    <textarea id="description" placeholder="予約内容の詳細">予約番号: ABC12345
+プラン: 3泊4日 スタンダードプラン
+部屋タイプ: 和室10畳
+人数: 大人2名
+備考: 禁煙室希望</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="url">予約ページURL</label>
+    <input type="url" id="url" value="https://example.com/reservation/ABC12345" placeholder="https://...">
+  </div>
+
+  <div class="form-group">
+    <label for="attach">添付ファイル</label>
+    <input type="file" id="attach" accept=".pdf,.jpg,.jpeg,.png,.gif">
+    <small style="color: #888; display: block; margin-top: 5px;">PDF・画像ファイルを添付できます</small>
+  </div>
+
+</div>
+
+<button onclick="downloadICS()">カレンダーに登録（ICSダウンロード）</button>
+
+<script>
+// 日付をICS形式に変換（YYYYMMDD）
+function formatDateForICS(dateStr) {
+  return dateStr.replace(/-/g, '');
+}
+
+// 特殊文字をエスケープ
+function escapeICS(str) {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;')
+    .replace(/\n/g, '\\n');
+}
+
+// UIDを生成
+function generateUID() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2) + '@ics-generator';
+}
+
+// ファイルをBase64に変換
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// MIMEタイプを取得
+function getMimeType(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const mimeTypes = {
+    'pdf': 'application/pdf',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif'
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
+// Base64を75文字で折り返し（ICS仕様）
+function foldBase64(base64) {
+  const lines = [];
+  let i = 0;
+  while (i < base64.length) {
+    if (i === 0) {
+      lines.push(base64.substring(i, i + 75));
+      i += 75;
+    } else {
+      lines.push(' ' + base64.substring(i, i + 74));
+      i += 74;
+    }
+  }
+  return lines.join('\r\n');
+}
+
+// ICSファイルを生成してダウンロード
+async function downloadICS() {
+  const summary = document.getElementById('summary').value || '宿泊予約';
+  const dtstart = document.getElementById('dtstart').value;
+  const dtend = document.getElementById('dtend').value;
+  const location = document.getElementById('location').value;
+  const description = document.getElementById('description').value;
+  const url = document.getElementById('url').value;
+  const attachInput = document.getElementById('attach');
+  const attachFile = attachInput.files[0];
+
+  if (!dtstart || !dtend) {
+    alert('チェックイン日とチェックアウト日を入力してください');
+    return;
+  }
+
+  // DTSTAMP用の現在日時を生成
+  const now = new Date();
+  const dtstamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+
+  let icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//ICS Generator//JP',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${generateUID()}`,
+    `DTSTAMP:${dtstamp}`,
+    `SUMMARY:${escapeICS(summary)}`,
+    `DTSTART;VALUE=DATE:${formatDateForICS(dtstart)}`,
+    `DTEND;VALUE=DATE:${formatDateForICS(dtend)}`
+  ];
+
+  if (location) {
+    icsContent.push(`LOCATION:${escapeICS(location)}`);
+  }
+
+  if (description) {
+    icsContent.push(`DESCRIPTION:${escapeICS(description)}`);
+  }
+
+  if (url) {
+    icsContent.push(`URL:${url}`);
+  }
+
+  if (attachFile) {
+    const base64 = await fileToBase64(attachFile);
+    const mimeType = getMimeType(attachFile);
+    const attachLine = `ATTACH;ENCODING=BASE64;VALUE=BINARY;FMTTYPE=${mimeType}:`;
+    icsContent.push(attachLine + foldBase64(base64).replace(/^\s/, ''));
+  }
+
+  icsContent.push('STATUS:CONFIRMED');
+  icsContent.push('SEQUENCE:0');
+
+  icsContent.push('END:VEVENT');
+  icsContent.push('END:VCALENDAR');
+
+  const icsString = icsContent.join('\r\n');
+  
+  // Blobを作成してダウンロード
+  const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = 'reservation.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
+}
+</script>
 
 </body>
 </html>

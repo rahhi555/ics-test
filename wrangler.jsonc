@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ics-test",
+  "name": "app",
   "main": "src/index.ts",
   "compatibility_date": "2026-02-04",
   // "compatibility_flags": [
@@ -32,9 +32,6 @@
   //   "binding": "AI"
   // },
   "observability": {
-    "logs": {
-      "enabled": false,
-      "invocation_logs": true
-    }
-  }
+    "enabled": false,
+  },
 }

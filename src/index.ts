@@ -23,15 +23,15 @@ function generateUID(): string {
 }
 
 // ICSファイル生成エンドポイント
-app.post("/generate-ics", async (c) => {
-  const body = await c.req.parseBody();
+app.get("/generate-ics", (c) => {
+  const query = c.req.query();
 
-  const summary = (body.summary as string) || "宿泊予約";
-  const dtstart = body.dtstart as string;
-  const dtend = body.dtend as string;
-  const location = body.location as string;
-  const description = body.description as string;
-  const url = body.url as string;
+  const summary = query.summary || "宿泊予約";
+  const dtstart = query.dtstart;
+  const dtend = query.dtend;
+  const location = query.location;
+  const description = query.description;
+  const url = query.url;
 
   if (!dtstart || !dtend) {
     return c.text("チェックイン日とチェックアウト日は必須です", 400);

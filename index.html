@@ -105,19 +105,19 @@
           type="text"
           id="summary"
           name="summary"
-          value="温泉旅館 山水荘 宿泊予約"
+          value="STITCH HOTEL Kyoto 宿泊予約"
           placeholder="宿泊施設名・予約名"
         />
       </div>
 
       <div class="form-group">
-        <label for="dtstart">チェックイン日</label>
-        <input type="date" id="dtstart" name="dtstart" required />
+        <label for="dtstart">チェックイン日時</label>
+        <input type="datetime-local" id="dtstart" name="dtstart" required />
       </div>
 
       <div class="form-group">
-        <label for="dtend">チェックアウト日</label>
-        <input type="date" id="dtend" name="dtend" required />
+        <label for="dtend">チェックアウト日時</label>
+        <input type="datetime-local" id="dtend" name="dtend" required />
       </div>
 
       <div class="form-group">
@@ -126,7 +126,7 @@
           type="text"
           id="location"
           name="location"
-          value="東京都渋谷区神宮前1-2-3"
+          value="京都府京都市下京区西石垣通四条下ル斎藤町１１９"
           placeholder="宿泊施設の住所"
         />
       </div>
@@ -134,11 +134,14 @@
       <div class="form-group">
         <label for="description">予約詳細</label>
         <textarea id="description" name="description" placeholder="予約内容の詳細">
-予約番号: ABC12345
-プラン: 3泊4日 スタンダードプラン
-部屋タイプ: 和室10畳
-人数: 大人2名
-備考: 禁煙室希望</textarea
+宿泊施設名: STITCH HOTEL Kyoto
+プラン: スタンダードキング 【朝食付】
+部屋: スタンダードキング
+人数（1室目）: 大人1名 子供2名（9歳・5歳）
+人数（2室目）: 大人2名 子供2名（9歳・5歳）
+ベッドタイプ: キングベッド1台またはシングルベッド2台
+食事: 朝食付き
+含まれる特典: プール利用無料2名分（1日につき）</textarea
         >
       </div>
 
@@ -159,26 +162,30 @@
     </form>
 
     <script>
-      // 日付をYYYY-MM-DD形式にフォーマット
-      function formatDate(date) {
+      // 日時をYYYY-MM-DDTHH:MM形式にフォーマット
+      function formatDateTime(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
       }
 
-      // 初期日付を設定
+      // 初期日時を設定
       const today = new Date();
 
-      // チェックイン: 明日
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-      document.getElementById("dtstart").value = formatDate(tomorrow);
+      // チェックイン: 明日 15:00
+      const checkin = new Date(today);
+      checkin.setDate(today.getDate() + 1);
+      checkin.setHours(15, 0, 0, 0);
+      document.getElementById("dtstart").value = formatDateTime(checkin);
 
-      // チェックアウト: 明日から4日後
-      const checkout = new Date(tomorrow);
-      checkout.setDate(tomorrow.getDate() + 4);
-      document.getElementById("dtend").value = formatDate(checkout);
+      // チェックアウト: 明日から4日後 11:00
+      const checkout = new Date(checkin);
+      checkout.setDate(checkin.getDate() + 4);
+      checkout.setHours(11, 0, 0, 0);
+      document.getElementById("dtend").value = formatDateTime(checkout);
 
       // function openWebcal() {
       //   const summary = document.getElementById("summary").value;

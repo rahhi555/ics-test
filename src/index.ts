@@ -12,9 +12,10 @@ function escapeICS(str: string): string {
   return str.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
 }
 
-// 日付をICS形式に変換（YYYYMMDD）
-function formatDateForICS(dateStr: string): string {
-  return dateStr.replace(/-/g, "");
+// 日時をICS形式に変換（YYYYMMDDTHHMMSS）
+function formatDateTimeForICS(dateTimeStr: string): string {
+  // YYYY-MM-DDTHH:MM → YYYYMMDDTHHMMSS
+  return dateTimeStr.replace(/-/g, "").replace(":", "") + "00";
 }
 
 // UIDを生成
@@ -54,8 +55,8 @@ app.get("/generate-ics", (c) => {
     `UID:${generateUID()}`,
     `DTSTAMP:${dtstamp}`,
     `SUMMARY:${escapeICS(summary)}`,
-    `DTSTART;VALUE=DATE:${formatDateForICS(dtstart)}`,
-    `DTEND;VALUE=DATE:${formatDateForICS(dtend)}`,
+    `DTSTART;TZID=Asia/Tokyo:${formatDateTimeForICS(dtstart)}`,
+    `DTEND;TZID=Asia/Tokyo:${formatDateTimeForICS(dtend)}`,
   ];
 
   if (location) {

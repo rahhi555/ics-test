@@ -81,6 +81,18 @@
         margin-bottom: 20px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
+      .webcal-link {
+        display: block;
+        text-align: center;
+        margin-top: 10px;
+        color: #888;
+        font-size: 13px;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .webcal-link:hover {
+        color: #666;
+      }
     </style>
   </head>
   <body>
@@ -142,6 +154,39 @@
       </div>
 
       <button type="submit">ICSファイルをダウンロード</button>
+
+      <a class="webcal-link" onclick="openWebcal()">webcal方式で登録</a>
     </form>
+
+    <script>
+      function openWebcal() {
+        const summary = document.getElementById("summary").value;
+        const dtstart = document.getElementById("dtstart").value;
+        const dtend = document.getElementById("dtend").value;
+        const location = document.getElementById("location").value;
+        const description = document.getElementById("description").value;
+        const url = document.getElementById("url").value;
+
+        if (!dtstart || !dtend) {
+          alert("チェックイン日とチェックアウト日を入力してください");
+          return;
+        }
+
+        const params = new URLSearchParams({
+          summary,
+          dtstart,
+          dtend,
+          location,
+          description,
+          url,
+        });
+
+        // 現在のURLからwebcal://スキームのURLを生成
+        const currentUrl = new URL(window.location.href);
+        const webcalUrl = `webcal://${currentUrl.host}/generate-ics?${params.toString()}`;
+
+        window.location.href = webcalUrl;
+      }
+    </script>
   </body>
 </html>

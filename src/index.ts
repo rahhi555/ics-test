@@ -80,7 +80,7 @@ app.get("/generate-ics", (c) => {
   // Content-Disposition付きでICSファイルを返す
   return c.body(icsString, 200, {
     "Content-Type": "text/calendar; charset=utf-8",
-    "Content-Disposition": 'inline; filename="reservation.ics"',
+    "Content-Disposition": 'attachment; filename="reservation.ics"',
   });
 });
 
